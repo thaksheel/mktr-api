@@ -27,6 +27,7 @@ class Clinique:
         """
         Scrapes all products URLs from Clinique and return a dict with all product links by categories
         """
+        print('started stie_map() for clinique.')
         site = dict(
             zip(
                 [url.replace(BASE + "/", "") for url in PRODUCT_CAT_URLS],
@@ -69,9 +70,10 @@ class Clinique:
         if export:
             with open(DIRECTORY + "clinique_site_map.json", "w") as f:
                 json.dump(site, f)
+        print('site_map() complete.')
         return site
 
-    async def get_page(self, client: httpx.Client, url):
+    async def get_page(self, client: httpx.Client, url, i):
         response = await client.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         js = soup.find("script", {"type": "application/ld+json"})
@@ -80,11 +82,13 @@ class Clinique:
             reviews["review"].append(float(js["aggregateRating"]["ratingValue"]))
             reviews["review_count"].append(int(js["aggregateRating"]["reviewCount"]))
         except KeyError:
-            # print(js["name"], url)
-            return {js["name"]: url}
+            fail = {js["name"]: url}
+            print(f'Failed: {fail}')
+            return fail
         reviews["product_name"].append(js["name"])
         reviews["url"].append(url)
         reviews["sku"].append(js["sku"])
+        print(f'{i}) Product Done: {js["name"]}')
 
     async def main(self, reviews, export=0):
         site = self.site_map(export)
@@ -96,8 +100,8 @@ class Clinique:
         ]
         async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(10.0, connect=60.0)) as client:
             tasks = []
-            for url in urls:
-                tasks.append(asyncio.create_task(self.get_page(client, url)))
+            for i, url in enumerate(urls):
+                tasks.append(asyncio.create_task(self.get_page(client, url, i)))
             failed = await asyncio.gather(*tasks)
             if export:
                 with open(DIRECTORY + "clinique_reviews.json", "w") as f:
