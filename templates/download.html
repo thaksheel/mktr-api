@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download File</title>
+    <style>
+        a {
+            padding: 20px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            background-color: #f8f8f8;
+            margin-bottom: 5px;
+            display: inline-block;
+
+        }
+        a:hover {
+            background-color: #e8e8e8;
+        }
+
+        .wrapper {
+            text-align: center;
+            /* Change to left or right as needed */
+        }
+    </style>
+</head>
+
+<body>
+    {% for filename in files %}
+    <div class="wrapper">
+        <a href="{{ url_for('download_file', filename=filename) }}">{{ filename }}</a><br />
+    </div>
+    {% endfor %}
+</body>
+
+</html>

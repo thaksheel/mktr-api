@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPE Upload Form</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+            flex-wrap: wrap;
+        }
+
+        h2 {
+            color: #5cb85c;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        ul li::before {
+            content: '•';
+            color: #5cb85c;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.3s ease-in-out;
+            position: relative;
+        }
+
+        form:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+        }
+
+        label {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #5cb85c;
+        }
+
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <h2>PPE Prototype</h2>
+    <ul>
+        <li>Change the excel files provided for the components, property, ownership, and lien sheets</li>
+        <li>Leave the raw sheet untouched</li>
+        <li>Once you upload the file, it will take 8s - 12s to process since the dataset has 9500 rows of data</li>
+        <li>Once done, you can see a history of all the files processed and download them</li>
+        <li>If you want skip to the download page, add "/download" to the url</li>
+    </ul> -->
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="file">File:</label>
+        <input type="file" id="file" name="file"><br />
+        <button>Upload</button>
+    </form>
+</body>
+
+</html>
