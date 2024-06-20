@@ -94,7 +94,7 @@ class Clinique:
             if k != "total_products"
             for z in v["product_urls"]
         ]
-        async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20)) as client:
+        async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(10.0, connect=60.0)) as client:
             tasks = []
             for url in urls:
                 tasks.append(asyncio.create_task(self.get_page(client, url)))
