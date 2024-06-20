@@ -1,6 +1,7 @@
 from flask import (
     Flask,
     redirect,
+    request,
     url_for,
     render_template,
     send_from_directory,
@@ -9,18 +10,15 @@ import os
 from clinique import Clinique
 
 
-# ALLOWED_EXTENSIONS = set(["csv"])
-ALLOWED_EXTENSIONS = set(['xlsx'])
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def home():
-    clinique = Clinique()
-    clinique.run(1)
-    return redirect(url_for('download'))
+    if request.method == 'POST':
+        clinique = Clinique()
+        clinique.run(1)
+        return redirect(url_for('download'))
+    return render_template('upload.html')
 
 @app.route("/download")
 def download():

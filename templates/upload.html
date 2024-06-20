@@ -45,30 +45,22 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             transition: box-shadow 0.3s ease-in-out;
             position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 75vh;
         }
 
         form:hover {
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-
         }
 
         label {
             font-size: 18px;
             display: block;
-            margin-bottom: 10px;
-        }
-
-        input[type="file"] {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-
-        input[type="file"]:hover {
-            border-color: #5cb85c;
+            margin-bottom: 30px;
+            text-align: center;
         }
 
         button {
@@ -83,24 +75,18 @@
         }
 
         button:hover {
-            background-color: #4cae4c;
+            background-color: #86db86;
         }
+        
     </style>
 </head>
 
 <body>
-    <!-- <h2>PPE Prototype</h2>
-    <ul>
-        <li>Change the excel files provided for the components, property, ownership, and lien sheets</li>
-        <li>Leave the raw sheet untouched</li>
-        <li>Once you upload the file, it will take 8s - 12s to process since the dataset has 9500 rows of data</li>
-        <li>Once done, you can see a history of all the files processed and download them</li>
-        <li>If you want skip to the download page, add "/download" to the url</li>
-    </ul> -->
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-        <label for="file">File:</label>
-        <input type="file" id="file" name="file"><br />
-        <button>Upload</button>
+    <form method="POST">
+        <h1>Clinique's Products</h1>
+        <label>This scraping takes 15s - 20s to complete (sometimes 30s+). The page will redirect to a downloads page to
+            export the products reviews data. </label>
+        <button>Scrape Clinique.com</button>
     </form>
 </body>
 

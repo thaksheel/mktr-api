@@ -25,6 +25,26 @@
             text-align: center;
             /* Change to left or right as needed */
         }
+        form {
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+            margin-top: 30px;
+        }
+
+        button:hover {
+            background-color: #86db86;
+        }
     </style>
 </head>
 
@@ -34,6 +54,9 @@
         <a href="{{ url_for('download_file', filename=filename) }}">{{ filename }}</a><br />
     </div>
     {% endfor %}
+    <form action="upload.html">
+        <button>Back</button>
+    </form>
 </body>
 
 </html>
