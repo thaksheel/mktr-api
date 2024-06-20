@@ -1,13 +1,10 @@
 from flask import (
     Flask,
-    request,
     redirect,
     url_for,
     render_template,
     send_from_directory,
 )
-from werkzeug.utils import secure_filename
-from datetime import datetime
 import os
 from clinique import Clinique
 
