@@ -100,9 +100,11 @@ class Clinique:
         ]
         async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(10.0, connect=60.0)) as client:
             tasks = []
+            print('---------> Started scraping products <---------')
             for i, url in enumerate(urls):
                 tasks.append(asyncio.create_task(self.get_page(client, url, i)))
             failed = await asyncio.gather(*tasks)
+            print('---------> Scraping Complete products <---------')
             if export:
                 with open(DIRECTORY + "clinique_reviews.json", "w") as f:
                     json.dump(reviews, f)
