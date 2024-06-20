@@ -20,24 +20,10 @@ def allowed_file(filename):
 app = Flask(__name__)
 
 @app.route("/")
-@app.route("/upload", methods=["POST", "GET"])
-def upload():
-    if request.method == "POST":
-        file = request.files["file"]
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            new_filename = f'{filename.split(".")[0]}_{str(datetime.now())}.xlsx'
-            safe_filename = new_filename.replace(":", "-")
-            save_location = os.path.join("uploads", safe_filename)
-            file.save(save_location)
-
-            # NOTE: using the uploaded file for processing in another script
-            ppe = PPE(save_location)
-            ppe.run(export=1)
-            return redirect(
-                url_for("download")
-            )  # redirects to "download" once upload is complete
-    return render_template("upload.html")
+def home():
+    clinique = Clinique()
+    clinique.run(1)
+    return redirect(url_for('download'))
 
 @app.route("/download")
 def download():

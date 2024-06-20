@@ -67,7 +67,7 @@ class Clinique:
         site["total_products"] = products
 
         if export:
-            with open(DIRECTORY + "site_map.json", "w") as f:
+            with open(DIRECTORY + "clinique_site_map.json", "w") as f:
                 json.dump(site, f)
         return site
 
@@ -100,12 +100,12 @@ class Clinique:
                 tasks.append(asyncio.create_task(self.get_page(client, url)))
             failed = await asyncio.gather(*tasks)
             if export:
-                with open(DIRECTORY + "reviews.json", "w") as f:
+                with open(DIRECTORY + "clinique_reviews.json", "w") as f:
                     json.dump(reviews, f)
-                with open(DIRECTORY + "failed.json", "w") as f:
+                with open(DIRECTORY + "clinique_failed.json", "w") as f:
                     json.dump(failed, f)
                 df = pd.DataFrame(reviews)
-                df.to_excel(DIRECTORY + "reviews.xlsx", index=False)
+                df.to_excel(DIRECTORY + "clinique_reviews.xlsx", index=False)
             return reviews, failed
 
     def run(self, export=0):
