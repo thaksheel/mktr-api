@@ -80,7 +80,7 @@ class Clinique:
             reviews["review"].append(float(js["aggregateRating"]["ratingValue"]))
             reviews["review_count"].append(int(js["aggregateRating"]["reviewCount"]))
         except KeyError:
-            print(js["name"], url)
+            # print(js["name"], url)
             return {js["name"]: url}
         reviews["product_name"].append(js["name"])
         reviews["url"].append(url)
@@ -113,7 +113,7 @@ class Clinique:
         return r, f
 
 
-if __name__ == "__main__":
-    clinique = Clinique()
-    clinique.run(1)
-    print(f"Duration: {round((time.time() - p), 3)}")
+# if __name__ == "__main__":
+#     clinique = Clinique()
+#     clinique.run(1)
+#     print(f"Duration: {round((time.time() - p), 3)}")
