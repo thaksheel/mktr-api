@@ -3,7 +3,7 @@ import pandas as pd
 import json 
 import httpx
 import math
-
+import requests
 
 BASE = 'https://www.sephora.com'
 CLINIQUE_URL = 'https://www.sephora.com/brand/clinique'
@@ -55,9 +55,7 @@ class Sephora:
                         RESPONSE['product_name'].append(product['displayName'])
                         RESPONSE['url'].append(BASE + product['targetUrl'])
                 new_url = CLINIQUE_URL+QUERY+str(k+1)
-                timeout = httpx.Timeout(60.0)
-                client = httpx.Client(timeout=timeout)
-                page = client.get(new_url, headers=HEADERS)
+                page = requests.get(new_url, headers=HEADERS)
                 soup = BeautifulSoup(page.text, 'html.parser')
         if export:
             with open(DIRECTORY+'sephora_data.json', 'w') as f:
