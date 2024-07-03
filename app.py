@@ -18,7 +18,7 @@ app = Flask(__name__)
 def home():
     if request.method == 'POST':
         clinique = Clinique()
-        clinique.run(1)
+        clinique.run(export=1, limit=50)
         sephora = Sephora()
         sephora.scrape(export=1)
         return redirect(url_for('download'))

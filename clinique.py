@@ -88,7 +88,7 @@ class Clinique:
         reviews["sku"].append(js["sku"])
         print(f'{i}) Product Done: {js["name"]}')
 
-    async def main(self, reviews, export=0):
+    async def main(self, reviews, export=0, limit=-1):
         site = self.site_map(export)
         urls = [
             z
@@ -96,6 +96,8 @@ class Clinique:
             if k != "total_products"
             for z in v["product_urls"]
         ]
+        if limit > 0:
+            urls = urls[:limit]
         async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(10.0, connect=60.0)) as client:
             tasks = []
             print('---------> Started scraping products <---------')
@@ -112,8 +114,8 @@ class Clinique:
                 df.to_excel(DIRECTORY + "clinique_reviews.xlsx", index=False)
             return reviews, failed
 
-    def run(self, export=0):
-        r, f = asyncio.run(self.main(reviews, export=export))
+    def run(self, export=0, limit=-1):
+        r, f = asyncio.run(self.main(reviews, export=export, limit=limit))
         return r, f
 
 
