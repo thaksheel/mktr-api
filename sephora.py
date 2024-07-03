@@ -69,8 +69,8 @@ class Sephora:
         res = self._scrape(export=export)
         return res
 
-# if __name__ == "__main__":
-#     sephora = Sephora()
-#     sephora.scrape(export=1)
+if __name__ == "__main__":
+    sephora = Sephora()
+    sephora.scrape(export=1)
 
 
