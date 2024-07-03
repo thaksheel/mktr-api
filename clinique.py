@@ -98,7 +98,7 @@ class Clinique:
         ]
         if limit > 0:
             urls = urls[:limit]
-        async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(10.0, connect=60.0)) as client:
+        async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(60.0, connect=60.0)) as client:
             tasks = []
             print('---------> Started scraping products <---------')
             for i, url in enumerate(urls):

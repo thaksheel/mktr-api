@@ -37,7 +37,7 @@ class Sephora:
         soup = BeautifulSoup(page.text, 'html.parser')
         DATA['num_pages'], num_products = self.get_pages_num(soup)
 
-        with httpx.Client(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(30.0, connect=60.0)) as client:
+        with httpx.Client(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(60.0, connect=60.0)) as client:
             for k in range(DATA['num_pages']):
                 products_data = json.loads(soup.find(
                     'script', 
