@@ -33,7 +33,7 @@ class Sephora:
         return num_pages, num_products
 
     def _scrape(self, export=0):
-        page = httpx.get(CLINIQUE_URL, headers=HEADERS)
+        page = requests.get(CLINIQUE_URL, headers=HEADERS)
         soup = BeautifulSoup(page.text, 'html.parser')
         DATA['num_pages'], num_products = self.get_pages_num(soup)
 
