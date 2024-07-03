@@ -34,7 +34,7 @@ class Sephora:
 
     def _scrape(self, export=0):
         print('---------> Started scraping products <---------')
-        page = requests.get(CLINIQUE_URL, headers=HEADERS)
+        page = httpx.get(CLINIQUE_URL, headers=HEADERS)
         soup = BeautifulSoup(page.text, 'html.parser')
         DATA['num_pages'], num_products = self.get_pages_num(soup)
 
@@ -57,7 +57,7 @@ class Sephora:
                         RESPONSE['url'].append(BASE + product['targetUrl'])
                 new_url = CLINIQUE_URL+QUERY+str(k+1)
                 print(f'Progress ({round(len(RESPONSE["product_id"])/num_products, 2) * 100}%): {len(RESPONSE["product_id"])}/{num_products}')
-                page = requests.get(new_url, headers=HEADERS)
+                page = client.get(new_url, headers=HEADERS)
                 soup = BeautifulSoup(page.text, 'html.parser')
         print('---------> Scraping Complete products <---------')
         if export:
