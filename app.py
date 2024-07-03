@@ -8,6 +8,8 @@ from flask import (
 )
 import os
 from clinique import Clinique
+from sephora import Sephora
+
 
 
 app = Flask(__name__)
@@ -17,6 +19,8 @@ def home():
     if request.method == 'POST':
         clinique = Clinique()
         clinique.run(1)
+        sephora = Sephora()
+        sephora.scrape(export=1)
         return redirect(url_for('download'))
     return render_template('upload.html')
 

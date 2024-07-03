@@ -27,7 +27,6 @@ class Clinique:
         """
         Scrapes all products URLs from Clinique and return a dict with all product links by categories
         """
-        print('started stie_map() for clinique.')
         site = dict(
             zip(
                 [url.replace(BASE + "/", "") for url in PRODUCT_CAT_URLS],
@@ -70,7 +69,6 @@ class Clinique:
         if export:
             with open(DIRECTORY + "clinique_site_map.json", "w") as f:
                 json.dump(site, f)
-        print('site_map() complete.')
         return site
 
     async def get_page(self, client: httpx.Client, url, i):

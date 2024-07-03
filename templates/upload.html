@@ -16,6 +16,8 @@
             margin: 0;
             color: #333;
             flex-wrap: wrap;
+            flex-direction: column;
+            gap: 50px;
         }
 
         h2 {
@@ -57,10 +59,11 @@
         }
 
         label {
+            max-width: 70%;
             font-size: 18px;
             display: block;
             margin-bottom: 30px;
-            text-align: center;
+            text-align: left;
         }
 
         button {
@@ -77,15 +80,17 @@
         button:hover {
             background-color: #86db86;
         }
-
     </style>
 </head>
 
 <body>
     <form method="POST">
-        <h1>Clinique's Products</h1>
-        <label>This scraping takes 15s - 20s to complete (sometimes 30s+). The page will redirect to a downloads page to
-            export the products reviews data. </label>
+        <h1>Scrape Clinique's Products</h1>
+        <label><ul>
+            <li>This scraping takes 15s - 20s to complete (sometimes 30s+).</li>
+            <li>The page will redirect to a downloads page to export the products reviews data.</li>
+            <li>This Scrapes Clinique's products from the Sephora and Clinique.com</li>
+        </ul></label>
         <button>Scrape Clinique.com</button>
     </form>
 </body>
