@@ -55,6 +55,7 @@ class Sephora:
                         RESPONSE['product_name'].append(product['displayName'])
                         RESPONSE['url'].append(BASE + product['targetUrl'])
                 new_url = CLINIQUE_URL+QUERY+str(k+1)
+                print(f'Progress ({round(len(RESPONSE["product_id"])/num_products, 2) * 100}%): {len(RESPONSE["product_id"])}/{num_products}')
                 page = requests.get(new_url, headers=HEADERS)
                 soup = BeautifulSoup(page.text, 'html.parser')
         if export:
