@@ -4,6 +4,7 @@ import json
 import time
 import asyncio
 import pandas as pd
+import re 
 
 p = time.time()
 BASE = "https://www.clinique.com"
@@ -15,12 +16,14 @@ PRODUCT_CAT_URLS = [
 ]
 reviews = {
     "product_name": [],
+    "product_cat": [],
+    "sku": [],
     "review": [],
     "review_count": [],
     "url": [],
-    "sku": [],
 }
 DIRECTORY = './downloads/'
+PRODUCT_CAT = {}
 
 class Clinique:
     def site_map(self, export=0):
@@ -29,7 +32,7 @@ class Clinique:
         """
         site = dict(
             zip(
-                [url.replace(BASE + "/", "") for url in PRODUCT_CAT_URLS],
+                [re.search(r'/([^/]*)$', url).group(1) for url in PRODUCT_CAT_URLS],
                 list([[] for _ in range(len(PRODUCT_CAT_URLS))]),
             )
         )
@@ -63,7 +66,7 @@ class Clinique:
                     data["product_urls"].append(product_url)
                 products += len(data["product_urls"])
                 data["products_collected"] = len(data["product_urls"])
-                site[url.replace(BASE + "/", "")] = data
+                site[re.search(r'/([^/]*)$', url).group(1)] = data
         site["total_products"] = products
 
         if export:
@@ -71,7 +74,7 @@ class Clinique:
                 json.dump(site, f)
         return site
 
-    async def get_page(self, client: httpx.Client, url, i):
+    async def get_page(self, client: httpx.Client, url, i, PRODUCT_CAT):
         response = await client.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         js = soup.find("script", {"type": "application/ld+json"})
@@ -86,6 +89,7 @@ class Clinique:
         reviews["product_name"].append(js["name"])
         reviews["url"].append(url)
         reviews["sku"].append(js["sku"])
+        reviews['product_cat'].append(PRODUCT_CAT[url])
         print(f'{i}) Product Done: {js["name"]}')
 
     async def main(self, reviews, export=0, limit=-1):
@@ -96,13 +100,19 @@ class Clinique:
             if k != "total_products"
             for z in v["product_urls"]
         ]
+        PRODUCT_CAT = {
+            z: k 
+            for k, v in site.items()
+            if k != "total_products"
+            for z in v["product_urls"]
+        }
         if limit > 0:
             urls = urls[:limit]
         async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(60.0, connect=60.0)) as client:
             tasks = []
             print('---------> Started scraping products <---------')
             for i, url in enumerate(urls):
-                tasks.append(asyncio.create_task(self.get_page(client, url, i)))
+                tasks.append(asyncio.create_task(self.get_page(client, url, i, PRODUCT_CAT)))
             failed = await asyncio.gather(*tasks)
             print('---------> Scraping Complete products <---------')
             if export:
@@ -119,7 +129,7 @@ class Clinique:
         return r, f
 
 
-# if __name__ == "__main__":
-#     clinique = Clinique()
-#     clinique.run(1)
-#     print(f"Duration: {round((time.time() - p), 3)}")
+if __name__ == "__main__":
+    clinique = Clinique()
+    clinique.run(1)
+    print(f"Duration: {round((time.time() - p), 3)}s")
