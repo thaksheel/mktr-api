@@ -39,12 +39,14 @@ HEADERS = {
 
 class Sephora:
     def get_pages_num(self, soup: BeautifulSoup):
-        num_products = int(soup.find(
-            'p', 
-            {"data-at": 'number_of_products'}
-        ).get_text().split()[0])
-        num_pages = math.ceil(num_products/60)
-
+        try: 
+            num_products = int(soup.find(
+                'p', 
+                {"data-at": 'number_of_products'}
+            ).get_text().split()[0])
+            num_pages = math.ceil(num_products/60)
+        except AttributeError:
+            num_pages = 124
         return num_pages, num_products
 
     def _scrape(self, export=0):
