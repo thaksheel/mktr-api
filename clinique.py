@@ -86,7 +86,7 @@ class Clinique:
             fail = {js["name"]: url}
             print(f'Failed: {fail}')
             return fail
-        reviews["product_name"].append(js["name"])
+        reviews["product_name"].append(str(js["name"]).replace('\u2122', ''))
         reviews["url"].append(url)
         reviews["sku"].append(js["sku"])
         reviews['product_cat'].append(PRODUCT_CAT[url])
