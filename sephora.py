@@ -3,6 +3,8 @@ import pandas as pd
 import json 
 import httpx
 import math
+import chardet
+
 
 BASE = 'https://www.sephora.com'
 CLINIQUE_URL = 'https://www.sephora.com/brand/clinique'
@@ -29,13 +31,6 @@ HEADERS = {
     "Referer": "http://www.google.com/", # this made it work 
     'Accept-Encoding': 'gzip, deflate, br', # this made it work 
     }
-# HEADERS = {
-#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-#     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-#     "Accept-Language": "en-US,en;q=0.5",
-#     "DNT": "1",  # Do Not Track Request Header
-#     "Connection": "close",
-# }
 
 class Sephora:
     def get_pages_num(self, soup: BeautifulSoup):
@@ -54,13 +49,14 @@ class Sephora:
         page = httpx.get(CLINIQUE_URL, headers=HEADERS, timeout=30.0)
         soup = BeautifulSoup(page.text, 'html.parser')
         DATA['num_pages'], num_products = self.get_pages_num(soup)
-        # num_products = 124
 
-        with httpx.Client(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(60.0, connect=60.0)) as client:
+        with httpx.Client(limits=httpx.Limits(max_connections=20)) as client:
             for k in range(DATA['num_pages']):
                 new_url = CLINIQUE_URL+QUERY+str(k+1)
                 page = client.get(new_url, headers=HEADERS)
-                soup = BeautifulSoup(page.text, 'html.parser')
+                encoding = chardet.detect(page.content)['encoding']
+                page = page.content.decode(encoding)
+                soup = BeautifulSoup(page, 'html.parser')
                 products_data = json.loads(soup.find(
                     'script', 
                     {'id': 'linkStore'}
@@ -70,11 +66,11 @@ class Sephora:
                     if product['displayName'] in RESPONSE['product_name']:
                         continue 
                     else:
-                        RESPONSE['review'].append(product['rating'])
-                        RESPONSE['review_count'].append(product['reviews'])
+                        RESPONSE['review'].append(float(product['rating']))
+                        RESPONSE['review_count'].append(int(product['reviews']))
                         RESPONSE['sku'].append(product['currentSku']['skuId'])
                         RESPONSE['product_id'].append(product['productId'])
-                        RESPONSE['product_name'].append(str(product['displayName']).replace('\u2122', ''))
+                        RESPONSE['product_name'].append(str(product['displayName']).replace('\u2122', '').replace('&trade;', ''))
                         RESPONSE['url'].append(BASE + product['targetUrl'])
                 print(f'Progress ({round(len(RESPONSE["product_id"])/num_products, 2) * 100}%): {len(RESPONSE["product_id"])}/{num_products}')
                 new_url = CLINIQUE_URL+QUERY+str(k+1)

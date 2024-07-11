@@ -4,7 +4,7 @@ import json
 import time
 import asyncio
 import pandas as pd
-import re 
+import re
 
 p = time.time()
 BASE = "https://www.clinique.com"
@@ -22,8 +22,9 @@ reviews = {
     "review_count": [],
     "url": [],
 }
-DIRECTORY = './downloads/'
+DIRECTORY = "./downloads/"
 PRODUCT_CAT = {}
+
 
 class Clinique:
     def site_map(self, export=0):
@@ -32,7 +33,7 @@ class Clinique:
         """
         site = dict(
             zip(
-                [re.search(r'/([^/]*)$', url).group(1) for url in PRODUCT_CAT_URLS],
+                [re.search(r"/([^/]*)$", url).group(1) for url in PRODUCT_CAT_URLS],
                 list([[] for _ in range(len(PRODUCT_CAT_URLS))]),
             )
         )
@@ -66,7 +67,7 @@ class Clinique:
                     data["product_urls"].append(product_url)
                 products += len(data["product_urls"])
                 data["products_collected"] = len(data["product_urls"])
-                site[re.search(r'/([^/]*)$', url).group(1)] = data
+                site[re.search(r"/([^/]*)$", url).group(1)] = data
         site["total_products"] = products
 
         if export:
@@ -78,18 +79,23 @@ class Clinique:
         response = await client.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         js = soup.find("script", {"type": "application/ld+json"})
-        js = json.loads(js.get_text())
         try:
+            js = json.loads(js.get_text())
             reviews["review"].append(float(js["aggregateRating"]["ratingValue"]))
             reviews["review_count"].append(int(js["aggregateRating"]["reviewCount"]))
+        except AttributeError:
+            print(f"Attribute Error Failed: {url}")
+            return {"attributeError": url}
         except KeyError:
             fail = {js["name"]: url}
-            print(f'Failed: {fail}')
+            print(f"Key Error Failed: {fail}")
             return fail
-        reviews["product_name"].append(str(js["name"]).replace('\u2122', ''))
+        reviews["product_name"].append(
+            str(js["name"]).replace("\u2122", "").replace("&trade;", "")
+        )
         reviews["url"].append(url)
         reviews["sku"].append(js["sku"])
-        reviews['product_cat'].append(PRODUCT_CAT[url])
+        reviews["product_cat"].append(PRODUCT_CAT[url])
         print(f'{i}) Product Done: {js["name"]}')
 
     async def main(self, reviews, export=0, limit=-1):
@@ -101,27 +107,34 @@ class Clinique:
             for z in v["product_urls"]
         ]
         PRODUCT_CAT = {
-            z: k 
+            z: k
             for k, v in site.items()
             if k != "total_products"
             for z in v["product_urls"]
         }
+
         if limit > 0:
             urls = urls[:limit]
-        async with httpx.AsyncClient(limits=httpx.Limits(max_connections=20), timeout=httpx.Timeout(60.0, connect=60.0)) as client:
+        async with httpx.AsyncClient(
+            limits=httpx.Limits(max_connections=20),
+            timeout=httpx.Timeout(60.0, connect=60.0),
+        ) as client:
             tasks = []
-            print('---------> Started scraping products <---------')
+            print("---------> Started scraping products <---------")
             for i, url in enumerate(urls):
-                tasks.append(asyncio.create_task(self.get_page(client, url, i, PRODUCT_CAT)))
+                tasks.append(
+                    asyncio.create_task(self.get_page(client, url, i, PRODUCT_CAT))
+                )
             failed = await asyncio.gather(*tasks)
-            print('---------> Scraping Complete products <---------')
+
+            print("---------> Scraping Complete products <---------")
             if export:
                 with open(DIRECTORY + "clinique_reviews.json", "w") as f:
                     json.dump(reviews, f)
                 with open(DIRECTORY + "clinique_failed.json", "w") as f:
                     json.dump(failed, f)
                 df = pd.DataFrame(reviews)
-                df.to_excel(DIRECTORY + "clinique_reviews.xlsx", index=False)
+                df.to_excel(DIRECTORY + "clinique_data.xlsx", index=False)
             return reviews, failed
 
     def run(self, export=0, limit=-1):
