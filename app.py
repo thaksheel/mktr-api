@@ -9,10 +9,11 @@ from flask import (
 import os
 from clinique import Clinique
 from sephora import Sephora
-
+import link_data 
 
 
 app = Flask(__name__)
+app.json.sort_keys = False
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -33,6 +34,15 @@ def download():
 def download_file(filename):
     return send_from_directory("downloads", filename)
 
+@app.route('/link')
+def link_dataset():
+    response = link_data.link(directory='downloads/')
+    if response:
+        return {
+            'message': 'success', 
+            'linked': response[0], 
+            'unlinked': response[1], 
+            } 
 
 if __name__ == "__main__":
     app.run(debug=True, port="8000")
