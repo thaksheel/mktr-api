@@ -1,14 +1,15 @@
 from bs4 import BeautifulSoup
 import pandas as pd
-import json 
+import json
 import httpx
 import math
 import chardet
+import copy
 
 
-BASE = 'https://www.sephora.com'
-CLINIQUE_URL = 'https://www.sephora.com/brand/clinique'
-RESPONSE = {
+BASE = "https://www.sephora.com"
+CLINIQUE_URL = "https://www.sephora.com/brand/clinique"
+sephora_rating = {
     "product_name": [],
     "review": [],
     "review_count": [],
@@ -17,80 +18,188 @@ RESPONSE = {
     "product_id": [],
 }
 DATA = {
-    'num_pages': 3, 
+    "num_pages": 3,
 }
-QUERY = '?currentPage='
-DIRECTORY = './downloads/'
+QUERY = "?currentPage="
+DIRECTORY = "./downloads/"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/109.0",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
     "DNT": "1",
     "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1", 
-    "Referer": "http://www.google.com/", # this made it work 
-    'Accept-Encoding': 'gzip, deflate, br', # this made it work 
-    }
+    "Upgrade-Insecure-Requests": "1",
+    "Referer": "http://www.google.com/",  # this made it work
+    "Accept-Encoding": "gzip, deflate, br",  # this made it work
+}
+reviews_template = {
+    "sku": [],
+    "LastModificationTime": [],
+    "OriginalProductName": [],
+    "IsFeatured": [],
+    "TotalCommentCount": [],
+    "TotalClientResponseCount": [],
+    "TotalInappropriateFeedbackCount": [],
+    "Rating": [],
+    "IsRatingsOnly": [],
+    "IsRecommended": [],
+    "TotalPositiveFeedbackCount": [],
+    "TotalNegativeFeedbackCount": [],
+    "TotalFeedbackCount": [],
+    "ModerationStatus": [],
+    "SubmissionTime": [],
+    "ReviewText": [],
+    "Title": [],
+    "UserNickname": [],
+    "ReviewText": [],
+    "UserLocation": [],
+    "Helpfulness": [],
+    "IsSyndicated": [],
+    "age": [],
+    "hairCondition": [],
+    # ContextDataValues
+    "skinType": [],
+    "skinTone": [],
+    "IncentivizedReview": [],
+    "hairColor": [],
+    "eyeColor": [],
+    "StaffContext": [],
+}
+
 
 class Sephora:
     def get_pages_num(self, soup: BeautifulSoup):
-        try: 
-            num_products = int(soup.find(
-                'p', 
-                {"data-at": 'number_of_products'}
-            ).get_text().split()[0])
+        try:
+            num_products = int(
+                soup.find("p", {"data-at": "number_of_products"}).get_text().split()[0]
+            )
         except AttributeError:
             num_products = 124
-        num_pages = math.ceil(num_products/60)
+        num_pages = math.ceil(num_products / 60)
+
         return num_pages, num_products
 
-    def _scrape(self, export=0):
-        print('---------> Started scraping products <---------')
+    def process_response(self, response, reviews, sku, url):
+        for res in response:
+            reviews["sku"].append(sku)
+            for key, value in res.items():
+                if key in reviews or key == "ContextDataValues":
+                    if key == "ContextDataValues":
+                        for k, v in res[key].items():
+                            if k == "beautyInsider":
+                                continue
+                            if k in [
+                                "skinTone",
+                                "hairColor",
+                                "IncentivizedReview",
+                                "skinType",
+                                "StaffContext",
+                                "eyeColor",
+                            ]:
+                                reviews[k].append(v["Value"])
+                            else:
+                                reviews[k].append("")
+                    else:
+                        reviews[key].append(value)
+            for k, v in reviews.items():
+                base = len(reviews["sku"])
+                if base != len(v):
+                    reviews[k].append("")
+        return reviews
+
+    def get_response(self, client: httpx.Client, url):
+        return client.get(url).json()
+
+    def scrape_reviews(self):
+        with httpx.Client() as client:
+            offset = 0
+            requests_count = 0
+            skus = sephora_rating["sku"]
+            product_ids = sephora_rating["product_id"]
+            urls = sephora_rating["url"]
+            sephora_reviews = copy.deepcopy(reviews_template)
+            print("Started Sephora Reviews Scraping")
+
+            for i, product_id in enumerate(product_ids):
+                data_url = f"https://api.bazaarvoice.com/data/reviews.json?Filter=contentlocale%3Aen*&Filter=ProductId%3A{product_id}&Sort=SubmissionTime%3Adesc&Limit={100}&Offset={offset}&Include=Products%2CComments&Stats=Reviews&passkey=calXm2DyQVjcCy9agq85vmTJv5ELuuBCF2sdg4BnJzJus&apiversion=5.4"
+                response = self.get_response(client, data_url)
+                requests_count += 1
+                num_results = response["TotalResults"]
+                response = response["Results"]
+                reviews_length = len(response)
+                current_reviews = self.process_response(
+                    response, sephora_reviews, skus[i], urls[i]
+                )
+
+                while True:
+                    data_url = f"https://api.bazaarvoice.com/data/reviews.json?Filter=contentlocale%3Aen*&Filter=ProductId%3A{product_id}&Sort=SubmissionTime%3Adesc&Limit={100}&Offset={offset}&Include=Products%2CComments&Stats=Reviews&passkey=calXm2DyQVjcCy9agq85vmTJv5ELuuBCF2sdg4BnJzJus&apiversion=5.4"
+                    response = self.get_response(client, data_url)["Results"]
+                    current_reviews = self.process_response(
+                        response, sephora_reviews, skus[i], urls[i]
+                    )
+                    reviews_length += len(response)
+                    offset = reviews_length
+                    requests_count += 1
+                    if reviews_length >= num_results:
+                        break
+        with open(DIRECTORY + "sephora_reviews.json", "w") as f:
+            json.dump(sephora_reviews, f)
+        df = pd.DataFrame(sephora_reviews)
+        df.to_excel(DIRECTORY + "sephora_reviews.xlsx", index=False)
+
+        return sephora_reviews
+
+    def scrape_rating(self, export=0):
+        print("---------> Started scraping products <---------")
         page = httpx.get(CLINIQUE_URL, headers=HEADERS, timeout=30.0)
-        soup = BeautifulSoup(page.text, 'html.parser')
-        DATA['num_pages'], num_products = self.get_pages_num(soup)
+        soup = BeautifulSoup(page.text, "html.parser")
+        DATA["num_pages"], num_products = self.get_pages_num(soup)
 
         with httpx.Client(limits=httpx.Limits(max_connections=20)) as client:
-            for k in range(DATA['num_pages']):
-                new_url = CLINIQUE_URL+QUERY+str(k+1)
+            for k in range(DATA["num_pages"]):
+                new_url = CLINIQUE_URL + QUERY + str(k + 1)
                 page = client.get(new_url, headers=HEADERS)
-                encoding = chardet.detect(page.content)['encoding']
+                encoding = chardet.detect(page.content)["encoding"]
                 page = page.content.decode(encoding)
-                soup = BeautifulSoup(page, 'html.parser')
-                products_data = json.loads(soup.find(
-                    'script', 
-                    {'id': 'linkStore'}
-                ).get_text())
-                products = products_data['page']['nthBrand']['products']
+                soup = BeautifulSoup(page, "html.parser")
+                products_data = json.loads(
+                    soup.find("script", {"id": "linkStore"}).get_text()
+                )
+                products = products_data["page"]["nthBrand"]["products"]
                 for i, product in enumerate(products):
-                    if product['displayName'] in RESPONSE['product_name']:
-                        continue 
+                    if product["displayName"] in sephora_rating["product_name"]:
+                        continue
                     else:
-                        RESPONSE['review'].append(float(product['rating']))
-                        RESPONSE['review_count'].append(int(product['reviews']))
-                        RESPONSE['sku'].append(product['currentSku']['skuId'])
-                        RESPONSE['product_id'].append(product['productId'])
-                        RESPONSE['product_name'].append(str(product['displayName']).replace('\u2122', '').replace('&trade;', ''))
-                        RESPONSE['url'].append(BASE + product['targetUrl'])
-                print(f'Progress ({round(len(RESPONSE["product_id"])/num_products, 2) * 100}%): {len(RESPONSE["product_id"])}/{num_products}')
-                new_url = CLINIQUE_URL+QUERY+str(k+1)
+                        sephora_rating["review"].append(float(product["rating"]))
+                        sephora_rating["review_count"].append(int(product["reviews"]))
+                        sephora_rating["sku"].append(product["currentSku"]["skuId"])
+                        sephora_rating["product_id"].append(product["productId"])
+                        sephora_rating["product_name"].append(
+                            str(product["displayName"])
+                            .replace("\u2122", "")
+                            .replace("&trade;", "")
+                        )
+                        sephora_rating["url"].append(BASE + product["targetUrl"])
+                print(
+                    f'Progress ({round(len(sephora_rating["product_id"])/num_products, 2) * 100}%): {len(sephora_rating["product_id"])}/{num_products}'
+                )
+                new_url = CLINIQUE_URL + QUERY + str(k + 1)
                 page = client.get(new_url, headers=HEADERS)
-                soup = BeautifulSoup(page.text, 'html.parser')
-        print('---------> Scraping Complete products <---------')
+                soup = BeautifulSoup(page.text, "html.parser")
+        print("---------> Scraping Complete products <---------")
         if export:
-            with open(DIRECTORY+'sephora_data.json', 'w') as f:
-                json.dump(RESPONSE, f)
-            df = pd.DataFrame(RESPONSE)
-            df.to_excel(DIRECTORY+ 'sephora_data.xlsx', index=False)
-            print(f'Sephore scraping done ({round(len(RESPONSE["product_id"])/num_products, 2) * 100}%): {len(RESPONSE["product_id"])}/{num_products}')
-        return RESPONSE
+            with open(DIRECTORY + "sephora_rating.json", "w") as f:
+                json.dump(sephora_rating, f)
+            df = pd.DataFrame(sephora_rating)
+            df.to_excel(DIRECTORY + "sephora_rating.xlsx", index=False)
+            print(
+                f'Sephore scraping done ({round(len(sephora_rating["product_id"])/num_products, 2) * 100}%): {len(sephora_rating["product_id"])}/{num_products}'
+            )
 
-    def scrape(self, export=0):
-        res = self._scrape(export=export)
-        return res
+        return sephora_rating
+
 
 if __name__ == "__main__":
     sephora = Sephora()
-    sephora.scrape(export=1)
-
-
+    sephora.scrape_rating(export=1)
+    sephora.scrape_reviews()

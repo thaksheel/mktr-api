@@ -9,7 +9,7 @@ from flask import (
 import os
 from clinique import Clinique
 from sephora import Sephora
-import link_data 
+import api.connect_tables as connect_tables 
 
 
 app = Flask(__name__)
@@ -36,7 +36,7 @@ def download_file(filename):
 
 @app.route('/link')
 def link_dataset():
-    response = link_data.link(directory='downloads/')
+    response = connect_tables.link(directory='downloads/')
     if response:
         return {
             'message': 'success', 
